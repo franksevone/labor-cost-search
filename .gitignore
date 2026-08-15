@@ -1,0 +1,9 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# ชั่วคราว / วิเคราะห์
+_*.py
+_*.txt
+_*.json

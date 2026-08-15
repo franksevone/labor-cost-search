@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบค้นหาบัญชีค่าแรงงานก่อสร้าง</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --ink: #1c2733;
+    --muted: #5b6b7b;
+    --line: #c9d3dd;
+    --accent: #0f5e8a;
+    --accent-2: #1a7fb8;
+    --gold: #9a6d00;
+    --head-bg: #0f3d5c;
+    --thead-bg: #e9eff5;
+    --row-alt: #f7fafc;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Noto Sans Thai", Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--head-bg), #14567e);
+    color: #fff;
+    padding: 22px 20px 18px;
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+  header p { margin: 0; font-size: 13px; opacity: .85; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 60px; }
+
+  /* controls */
+  .controls {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 14px 0 10px;
+  }
+  .controls-inner {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  .search-box { flex: 1 1 280px; position: relative; }
+  .search-box input {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--card);
+    outline: none;
+    box-shadow: 0 1px 3px rgba(15,45,70,.06);
+  }
+  .search-box input:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(26,127,184,.15); }
+  .search-box .mag {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 16px; pointer-events: none;
+  }
+  select {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    max-width: 300px;
+  }
+  .btn-clear {
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--accent);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-clear:hover { background: #eef4f8; }
+
+  /* selection bar */
+  .selbar {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: var(--head-bg);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(15,45,70,.35);
+    z-index: 30;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .selbar .selinfo b { color: #ffd76a; font-size: 16px; }
+  .selbar .btn-primary {
+    background: var(--accent-2);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .selbar .btn-primary:hover:not(:disabled) { background: #2090c9; }
+  .selbar .btn-primary:disabled { opacity: .5; cursor: default; }
+  .selbar .btn-clear {
+    background: transparent;
+    color: #cfe3f2;
+    border: 1px solid #4d7ba0;
+  }
+
+  .stats {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 4px 16px 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .stats b { color: var(--accent); }
+  .hint {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2px 16px 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .hint code {
+    background: #e9eff5;
+    border-radius: 4px;
+    padding: 0 5px;
+    font-size: 11.5px;
+    color: var(--accent);
+  }
+
+  /* grouping headers */
+  .cat-block { margin-top: 20px; }
+  .cat-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--head-bg);
+    padding: 8px 0 6px;
+    border-bottom: 2px solid var(--accent);
+  }
+  .cat-title .code {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    padding: 1px 8px;
+    font-size: 13px;
+  }
+  .type-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent-2);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin: 16px 0 10px;
+  }
+  .type-title .tcode { color: var(--accent); margin-right: 6px; }
+  .type-note { font-size: 12.5px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+  /* PDF-style table */
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(15,45,70,.05);
+  }
+  table.tbl { width: 100%; border-collapse: collapse; min-width: 780px; }
+  table.tbl th {
+    background: var(--thead-bg);
+    color: var(--head-bg);
+    font-size: 13.5px;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  table.tbl th.p-col, table.tbl td.c-price { text-align: right; }
+  table.tbl td {
+    padding: 7px 10px;
+    font-size: 13.5px;
+    border: 1px solid #d8e0e8;
+    vertical-align: top;
+  }
+  table.tbl tbody tr:nth-child(even) { background: var(--row-alt); }
+  td.c-code {
+    width: 74px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+  }
+  td.c-name { font-weight: 600; min-width: 200px; }
+  td.c-unit { width: 66px; color: var(--muted); white-space: nowrap; }
+  td.c-price { width: 120px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  td.c-note { color: var(--muted); font-size: 12.5px; }
+  td.c-sel { width: 34px; text-align: center; vertical-align: middle; }
+  .sel-box { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+  tr.sel-on td { background: #e9f5ec !important; }
+
+  /* sub-heading rows inside the table */
+  tr.sec-row td, tr.grp-row td, tr.sub-row td {
+    background: #eef4fa;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 13px;
+    border-left: 3px solid var(--accent-2);
+    padding: 6px 10px;
+  }
+  tr.sec-row td { background: #fdf6e3; color: var(--gold); border-left-color: var(--gold); }
+  tr.grp-row td { color: var(--accent-2); }
+  tr.sub-row td { background: #f0f6fa; color: #2b4a63; font-size: 13.5px; }
+  .scode { color: var(--muted); font-weight: 600; margin-right: 6px; font-size: 12px; }
+  tr.sec-row .scode { color: #b08a2a; }
+
+  mark { background: #fff3bf; border-radius: 3px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 15px; }
+  .empty .big { font-size: 34px; margin-bottom: 10px; }
+
+  @media (max-width: 600px) {
+    .selbar { width: calc(100% - 24px); justify-content: center; border-radius: 14px; }
+  }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 26px 16px 10px; }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 18px; }
+    select { max-width: 100%; flex: 1 1 45%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>🔎 ระบบค้นหาบัญชีค่าแรงงานก่อสร้าง</h1>
+    <p id="meta-line"></p>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="search-box">
+      <span class="mag">🔍</span>
+      <input id="search" type="text" placeholder="ค้นหางาน เช่น เสาเข็ม ฉาบปูน ท่อ PVC…" autocomplete="off">
+    </div>
+    <select id="cat" title="หมวดหมู่">
+      <option value="">ทุกหมวดหมู่</option>
+    </select>
+    <select id="type" title="ประเภท">
+      <option value="">ทุกประเภท</option>
+    </select>
+    <button class="btn-clear" id="clear">ล้างตัวกรอง</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="hint" id="hint"></div>
+</div>
+
+<div class="wrap">
+  <div id="results"></div>
+
+  <div class="selbar" id="selbar" style="display:none">
+    <span class="selinfo">เลือกแล้ว <b id="selcount">0</b> รายการ</span>
+    <button id="printBtn" class="btn-primary" disabled>🖨 พิมพ์สรุป</button>
+    <button id="clearSel" class="btn-clear">ล้างที่เลือก</button>
+  </div>
+
+  <footer>
+    ข้อมูลจากบัญชีค่าแรงงาน/ดำเนินการสำหรับถอดแบบคำนวณราคากลางงานก่อสร้าง —
+    หนังสือกรมบัญชีกลาง ด่วนที่สุด ที่ กค 0433.2/ว 480 ลงวันที่ 26 มิถุนายน 2569
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var DATA = window.LABOR_DATA;
+
+  var searchEl = document.getElementById("search");
+  var catEl = document.getElementById("cat");
+  var typeEl = document.getElementById("type");
+  var clearBtn = document.getElementById("clear");
+  var resultsEl = document.getElementById("results");
+  var statsEl = document.getElementById("stats");
+  var metaEl = document.getElementById("meta-line");
+  var hintEl = document.getElementById("hint");
+  var selbar = document.getElementById("selbar");
+  var selCount = document.getElementById("selcount");
+  var printBtn = document.getElementById("printBtn");
+  var clearSelBtn = document.getElementById("clearSel");
+
+  // ======================================================================
+  // เลือกหลายรายการ + พิมพ์สรุป (คงสถานะไว้ข้ามการค้นหา, เก็บใน localStorage)
+  // ======================================================================
+  var selected = new Set();
+  try {
+    JSON.parse(localStorage.getItem("laborSelV1") || "[]").forEach(function (k) { selected.add(k); });
+  } catch (e) {}
+  function saveSel() {
+    try { localStorage.setItem("laborSelV1", JSON.stringify(Array.from(selected))); } catch (e) {}
+  }
+  function updateSelbar() {
+    var n = selected.size;
+    selCount.textContent = n;
+    selbar.style.display = n ? "flex" : "none";
+    printBtn.disabled = !n;
+  }
+  function markSelRows() {
+    resultsEl.querySelectorAll("input.sel-box").forEach(function (cb) {
+      if (selected.has(cb.getAttribute("data-key"))) {
+        cb.checked = true;
+        resultsEl.querySelectorAll('tr[data-id="' + cb.getAttribute("data-id") + '"]')
+          .forEach(function (tr) { tr.classList.add("sel-on"); });
+      }
+    });
+  }
+  resultsEl.addEventListener("change", function (e) {
+    var cb = e.target;
+    if (!cb || !cb.classList || !cb.classList.contains("sel-box")) return;
+    var key = cb.getAttribute("data-key");
+    var id = cb.getAttribute("data-id");
+    if (cb.checked) selected.add(key); else selected.delete(key);
+    saveSel();
+    resultsEl.querySelectorAll('tr[data-id="' + id + '"]')
+      .forEach(function (tr) { tr.classList.toggle("sel-on", cb.checked); });
+    updateSelbar();
+  });
+  clearSelBtn.addEventListener("click", function () {
+    selected.clear();
+    saveSel();
+    render();
+  });
+  printBtn.addEventListener("click", function () {
+    if (!selected.size) return;
+    var selRows = rows.filter(function (r) { return selected.has(r.key); });
+    var w = window.open("", "_blank", "width=1000,height=700");
+    if (!w) { alert("เบราว์เซอร์บล็อก pop-up — อนุญาต pop-up แล้วลองใหม่อีกครั้ง"); return; }
+    w.document.write(buildPrintHtml(selRows));
+    w.document.close();
+  });
+  function buildPrintHtml(selRows) {
+    var h = [];
+    h.push("<!DOCTYPE html><html lang=\"th\"><head><meta charset=\"UTF-8\">");
+    h.push("<title>สรุปรายการค่าแรงที่เลือก</title><style>");
+    h.push("body{font-family:'Segoe UI','Noto Sans Thai',Tahoma,sans-serif;color:#1c2733;margin:24px;}");
+    h.push(".toolbar{position:fixed;top:12px;right:12px;display:flex;gap:8px;}");
+    h.push(".toolbar button{padding:8px 14px;border-radius:8px;border:1px solid #c9d3dd;background:#fff;cursor:pointer;font-size:14px;}");
+    h.push(".toolbar .print{background:#0f5e8a;color:#fff;border:none;font-weight:600;}");
+    h.push("h1{font-size:18px;margin:0 0 4px;} .src{font-size:12px;color:#5b6b7b;margin:0 0 4px;} .date{font-size:12px;color:#5b6b7b;margin:0 0 18px;}");
+    h.push("table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px;}");
+    h.push("th{background:#e9eff5;border:1px solid #c9d3dd;padding:7px 9px;text-align:left;font-size:12.5px;}");
+    h.push("td{border:1px solid #d8e0e8;padding:6px 9px;vertical-align:top;}");
+    h.push("td.no{width:44px;text-align:center;color:#5b6b7b;} td.price{white-space:nowrap;font-weight:600;} td.unit{white-space:nowrap;color:#5b6b7b;text-align:center;width:70px;} td.note{color:#5b6b7b;font-size:12px;} td.name{font-weight:600;}");
+    h.push(".cat{font-size:15px;font-weight:700;margin:18px 0 4px;padding:6px 10px;background:#0f3d5c;color:#fff;border-radius:6px;}");
+    h.push(".type{font-size:13.5px;font-weight:700;margin:12px 0 4px;padding:5px 10px;background:#eef4fa;border-left:4px solid #1a7fb8;color:#0f3d5c;border-radius:4px;}");
+    h.push("td.sub{background:#fdf6e3;font-weight:700;color:#9a6d00;}");
+    h.push("@media print{.toolbar{display:none;}body{margin:12mm;}}");
+    h.push("</style></head><body>");
+    h.push('<div class="toolbar"><button class="print" onclick="window.print()">🖨 พิมพ์</button><button onclick="window.close()">ปิด</button></div>');
+    h.push("<h1>สรุปรายการค่าแรงที่เลือก</h1>");
+    h.push('<p class="src">' + escapeHtml(DATA.meta.title) + "</p>");
+    h.push('<p class="src">' + escapeHtml(DATA.meta.source) + "</p>");
+    h.push('<p class="date">จำนวน ' + selRows.length + " รายการ · พิมพ์เมื่อ " +
+           new Date().toLocaleString("th-TH") + "</p>");
+    var num = 0, curCat = null, curType = null;
+    selRows.forEach(function (r) {
+      if (curCat !== r.cat) {
+        curCat = r.cat;
+        curType = null;
+        h.push('<div class="cat">' + escapeHtml(r.cat.code) + " " + escapeHtml(r.cat.name) + "</div>");
+        h.push('<table><thead><tr><th>ลำดับที่</th><th>รายการ</th><th>หน่วย</th>' +
+               "<th>ค่าแรง/หน่วย (บาท)</th><th>หมายเหตุ</th></tr></thead><tbody>");
+      }
+      if (curType !== r.type) {
+        curType = r.type;
+        h.push('<tr><td class="sub" colspan="5">' + escapeHtml(r.type.code) + " " +
+               escapeHtml(r.type.name) + "</td></tr>");
+      }
+      var it = r.item;
+      if (!it.prices.length) {
+        num++;
+        h.push('<tr><td class="no">' + num + '</td><td class="name" colspan="4">' +
+               escapeHtml(it.name) + "</td></tr>");
+        return;
+      }
+      var n = it.prices.length;
+      num++;
+      h.push("<tr>");
+      h.push('<td class="no" rowspan="' + n + '">' + num + "</td>");
+      h.push('<td class="name" rowspan="' + n + '">' +
+             (it.code ? '<span style="color:#5b6b7b">' + escapeHtml(it.code) + "</span> " : "") +
+             escapeHtml(it.name) + "</td>");
+      it.prices.forEach(function (p, idx) {
+        if (idx > 0) h.push("<tr>");
+        h.push('<td class="unit">' + escapeHtml(p.unit) + "</td>");
+        h.push('<td class="price">' + fmt(p.price) + "</td>");
+        h.push('<td class="note">' + escapeHtml(p.note || "") + "</td>");
+        h.push("</tr>");
+      });
+    });
+    if (curType !== null) h.push("</tbody></table>");
+    h.push("</body></html>");
+    return h.join("");
+  }
+
+  // ======================================================================
+  // คำพ้อง / คำย่อ (synonym & abbreviation search)
+  // ======================================================================
+  function normToken(s) {
+    return s.toLowerCase().replace(/[\s\.\-/()]/g, "");
+  }
+  var SYNONYMS = {};
+  function reg(synList) {
+    synList.forEach(function (s) { SYNONYMS[normToken(s)] = synList; });
+  }
+
+  reg(["คอนกรีต", "คสล", "ค.ส.ล.", "คอนกรีตเสริมเหล็ก"]);
+  reg(["เสริมเหล็ก", "คอนกรีตเสริมเหล็ก", "คสล", "ค.ส.ล.", "คอนกรีต"]);
+  reg(["เหล็กเส้น", "เหล็ก", "เหล็กเส้นเสริมคอนกรีต", "Rebar"]);
+  reg(["เหล็ก", "เหล็กเส้น", "เหล็กรูปพรรณ", "เหล็กกล่อง", "เหล็กแผ่น"]);
+  reg(["โครงคร่าว", "โครงเคร่า", "คร่าว", "เคร่า", "โครง"]);
+  reg(["ยิปซัม", "ยิปซั่ม", "ยิบซั่ม", "ยิบซัม", "ยิปซั่มบอร์ด", "ยิบซั่มบอร์ด", "GP"]);
+  reg(["บล็อก", "บล๊อก", "บล็อค", "บล๊อค", "คอนกรีตบล็อก", "อิฐบล็อก", "บล็อกแก้ว", "Glass Block"]);
+  reg(["มวลเบา", "อิฐมวลเบา", "คอนกรีตมวลเบา", "AAC"]);
+  reg(["กระเบื้อง", "กระเบื้องเซรามิค", "เซรามิค", "เซรามิก", "Ceramic"]);
+  reg(["เซรามิค", "เซรามิก", "กระเบื้อง", "Ceramic"]);
+  reg(["โมเสค", "โมเสก", "Mosaic"]);
+  reg(["แกรนิต", "แกรนิตโต้", "หินแกรนิต", "Granite", "Granito"]);
+  reg(["หินอ่อน", "Marble"]);
+  reg(["ทรายล้าง", "หินล้าง", "กรวดล้าง", "หินขัด"]);
+  reg(["หินขัด", "ขัดมัน", "ขัด"]);
+  reg(["พีวีซี", "พี วี ซี", "พี วี ซี.", "PVC", "Vinyl", "ไวนิล"]);
+  reg(["ไวนิล", "Vinyl", "พีวีซี", "พี วี ซี", "PVC"]);
+  reg(["กระเบื้องยาง", "ยาง", "ไวนิล", "Vinyl", "PVC"]);
+  reg(["เมทัลชีท", "เมทัล", "Metal Sheet", "Metal", "หลังคาเหล็ก", "เหล็กรีดลอน"]);
+  reg(["เหล็กรีดลอน", "รีดลอน", "Metal Sheet", "เมทัลชีท", "หลังคาเหล็ก"]);
+  reg(["กระเบื้องลอนคู่", "ลอนคู่", "ลอนเล็ก", "กระเบื้องลอน"]);
+  reg(["พรีม่า", "Prima"]);
+  reg(["นิวสไตล์", "New Style"]);
+  reg(["ไอยรา", "Ayara"]);
+  reg(["ซีแพค", "ซีแพคโมเนีย", "CPAC", "กระเบื้องคอนกรีต", "Monier"]);
+  reg(["หลังคา", "โครงหลังคา", "TRUSS", "Truss"]);
+  reg(["โครงหลังคา", "หลังคา", "TRUSS", "Truss"]);
+  reg(["ฝ้า", "ฝ้าเพดาน", "เพดาน"]);
+  reg(["เพดาน", "ฝ้า", "ฝ้าเพดาน"]);
+  reg(["ทาสี", "งานทาสี", "สี", "ทา"]);
+  reg(["สี", "ทาสี", "งานทาสี"]);
+  reg(["ฉาบปูน", "ฉาบ", "ปูนทราย", "ปูน"]);
+  reg(["ฉาบ", "ฉาบปูน", "ฉาบเรียบ", "ฉาบแต่ง"]);
+  reg(["ปูน", "ปูนทราย", "ฉาบปูน", "ปูนซีเมนต์"]);
+  reg(["กันซึม", "กันความชื้น", "Waterproof"]);
+  reg(["ฉนวน", "ฉนวนกันความร้อน", "ฉนวนกันความเย็น", "ฉนวนใยแก้ว", "ฉนวนหุ้มท่อ", "ฉนวนท่อลม"]);
+  reg(["สังกะสี", "ชุบสังกะสี", "ซิงก์", "Galvanized", "GI", "HDG", "Hot Dip Galvanized", "Zinc"]);
+  reg(["แอร์", "เครื่องปรับอากาศ", "ปรับอากาศ"]);
+  reg(["ปรับอากาศ", "เครื่องปรับอากาศ", "แอร์"]);
+  reg(["พัดลม", "พัดลมระบายอากาศ", "Fan"]);
+  reg(["ระบายอากาศ", "พัดลมระบายอากาศ", "พัดลม", "Fan"]);
+  reg(["ท่อลม", "ท่อลมอ่อน", "Duct", "Flexible Air Duct"]);
+  reg(["หน้ากากลม", "Diffuser", "Air Grille"]);
+  reg(["ม่านอากาศ", "Air Curtain"]);
+  reg(["ท่อทองแดง", "ทองแดง", "Copper", "ท่อแอร์"]);
+  reg(["ท่อแอร์", "ท่อทองแดง", "ท่อสารทำความเย็น", "ทองแดง"]);
+  reg(["สารทำความเย็น", "น้ำยาแอร์", "Refrigerant"]);
+  reg(["ท่อ", "เดินท่อ", "ท่อเหล็ก", "ท่อพีวีซี", "ท่อ PVC", "ท่อทองแดง", "ท่อลม"]);
+  reg(["เดินท่อ", "ท่อ", "ท่อเหล็ก", "ท่อ PVC"]);
+  reg(["ท่อ PVC", "ท่อพีวีซี", "PVC", "พี วี ซี", "ท่อ"]);
+  reg(["ประปา", "ระบบประปา", "น้ำประปา"]);
+  reg(["ระบายน้ำ", "ระบบระบายน้ำ", "ท่อระบายน้ำ"]);
+  reg(["สุขาภิบาล", "ระบบสุขาภิบาล", "สุขภัณฑ์"]);
+  reg(["สุขภัณฑ์", "เครื่องสุขภัณฑ์", "สุขา", "ชักโครก"]);
+  reg(["โถส้วม", "โถสุขภัณฑ์", "ส้วม", "ชักโครก"]);
+  reg(["ก๊อก", "ก๊อกน้ำ", "Faucet"]);
+  reg(["ฝักบัว", "Shower"]);
+  reg(["อ่างอาบน้ำ", "อ่าง", "Bathtub"]);
+  reg(["มาตรวัดน้ำ", "มิเตอร์น้ำ", "Water Meter"]);
+  reg(["ประตูน้ำ", "วาล์ว", "Valve", "Gate Valve"]);
+  reg(["วาล์ว", "ประตูน้ำ", "Valve"]);
+  reg(["ดับเพลิง", "ระบบดับเพลิง", "ถังดับเพลิง", "Fire", "Sprinkler"]);
+  reg(["ไฟฟ้า", "ระบบไฟฟ้า", "Electrical"]);
+  reg(["แรงสูง", "High Voltage", "HV"]);
+  reg(["แรงต่ำ", "Low Voltage", "LV"]);
+  reg(["สายไฟ", "สายไฟฟ้า", "สาย", "Cable"]);
+  reg(["สาย", "สายไฟ", "Cable", "สายไฟฟ้า"]);
+  reg(["โคมไฟ", "ดวงโคม", "หลอดไฟ", "Lighting Fixture", "Lighting", "Lamp"]);
+  reg(["หลอดไฟ", "โคมไฟ", "ดวงโคม", "Lamp", "Lighting"]);
+  reg(["ท่อร้อยสาย", "ท่อไฟฟ้า", "Conduit", "EMT", "IMC", "Raceway"]);
+  reg(["Conduit", "ท่อร้อยสาย", "ท่อไฟฟ้า", "EMT", "IMC", "Raceway"]);
+  reg(["รางเดินสาย", "Wireway", "Cable Tray", "Ladder"]);
+  reg(["Cable Tray", "รางเดินสาย", "Wireway", "Ladder"]);
+  reg(["เบรกเกอร์", "C.B.", "Circuit Breaker", "เซอร์กิตเบรกเกอร์", "Breaker"]);
+  reg(["สวิทช์", "สวิตช์", "Switch", "Wiring Device"]);
+  reg(["เต้ารับ", "ปลั๊ก", "Outlet", "เต้าเสียบ", "Receptacle"]);
+  reg(["ปลั๊ก", "เต้ารับ", "Outlet"]);
+  reg(["โทรศัพท์", "Telephone", "สายโทรศัพท์", "สื่อสาร"]);
+  reg(["Telephone", "โทรศัพท์", "สายโทรศัพท์"]);
+  reg(["สื่อสาร", "ระบบสื่อสาร", "โทรศัพท์", "Telephone", "Network"]);
+  reg(["ประตู", "ประตู-หน้าต่าง", "หน้าต่าง", "Door"]);
+  reg(["หน้าต่าง", "ประตู-หน้าต่าง", "ประตู", "Window"]);
+  reg(["ฐานราก", "ฐาน", "Footing"]);
+  reg(["บันได", "ขั้นบันได", "ลูกนอนบันได"]);
+  reg(["เชิงชาย", "Fascia"]);
+  reg(["รางน้ำ", "รางน้ำตะเข้", "Gutter"]);
+  reg(["ตะแกรง", "Wire mesh", "ลวดตะแกรง", "ลวด"]);
+  reg(["ลวด", "ลวดเชื่อม", "Wire", "ตะแกรง"]);
+  reg(["เชื่อม", "ลวดเชื่อม", "E60", "E70", "E80", "Welding"]);
+  reg(["ฉาบ", "ฉาบปูน", "ฉาบเรียบ", "ฉาบแต่งร่อง"]);
+  reg(["กันสาด", "Canopy"]);
+  reg(["พื้น", "พื้นไม้", "พื้นคอนกรีต", "พื้นปู"]);
+  reg(["อิฐ", "อิฐมอญ", "อิฐมวลเบา", "อิฐทนไฟ", "อิฐบล็อก"]);
+  reg(["หิน", "หินขัด", "หินล้าง", "หินอ่อน", "หินแกรนิต", "หินกาบ", "หินภูเขา"]);
+  reg(["หินกาบ", "Stone"]);
+  reg(["ราวระเบียง", "ราว", "ระเบียง"]);
+  reg(["โครงหลังคาไม้", "โครงไม้", "หลังคาไม้", "จันทัน", "แป"]);
+  reg(["จันทัน", "Rafter", "แป", "ระแนง"]);
+  reg(["ระแนง", "Batten", "จันทัน"]);
+  reg(["มุงหลังคา", "มุง", "หลังคา"]);
+  reg(["รื้อถอน", "รื้อ", "Demolition", "ถอน"]);
+  reg(["ซ่อม", "ซ่อมแซม", "ซ่อมแซมโครงสร้าง", "Repair"]);
+  reg(["กันความร้อน", "ฉนวนกันความร้อน", "กันร้อน"]);
+  reg(["ไม้เทียม", "ไม้สำเร็จรูป", "ไม้จริง"]);
+  reg(["ไม้เนื้อแข็ง", "ไม้ยาง", "ไม้แดง", "ไม้มะค่า", "ไม้สัก"]);
+  reg(["ลามิเนต", "Laminate", "ไม้สำเร็จรูป"]);
+  reg(["พรม", "Carpet"]);
+  reg(["สแตนเลส", "Stainless", "Stainless Steel"]);
+  reg(["อลูมิเนียม", "Aluminum", "Aluminium", "Alu"]);
+  reg(["กระจก", "Glass"]);
+  reg(["ยึด", "จับยึด", "Anchor", "Dowel Bar", "เหล็กสมอ"]);
+  reg(["Dowel Bar", "เหล็กสมอ", "เหล็กเดือย", "สมอ"]);
+  reg(["เหล็กสมอ", "Dowel Bar", "เหล็กเดือย"]);
+  reg(["ตอกเสาเข็ม", "ตอกเข็ม", "เสาเข็ม", "Pile", "Driving"]);
+  reg(["เสาเข็ม", "เข็ม", "Pile", "ตอกเสาเข็ม"]);
+  reg(["ขุด", "ขุดดิน", "ขุดหลุม", "Excavation", "ขุดหลุมฐานราก"]);
+  reg(["ขุดหลุมฐานราก", "ขุด", "ฐานราก", "ถมคืน", "ถม"]);
+  reg(["ถม", "ถมคืน", "ถมดิน", "ทรายถม"]);
+  reg(["คอนกรีตหยาบ", "คอนกรีตรอง", "รองก้นหลุม"]);
+  reg(["เทคอนกรีต", "เทปูน", "คอนกรีต", "ผสมคอนกรีต"]);
+  reg(["แบบหล่อ", "แบบหล่อคอนกรีต", "แบบไม้", "Formwork"]);
+  reg(["คอนกรีตอัดแรง", "อัดแรง", "Pre-stressed", "Prestressed", "PC"]);
+  reg(["แผ่นพื้นสำเร็จรูป", "พื้นสำเร็จรูป", "Hollow Core", "แผ่นพื้น"]);
+  reg(["ตะแกรงเหล็ก", "Wire mesh", "เหล็กตะแกรง"]);
+  reg(["ตัดหัวเสาเข็ม", "ตัดหัวเข็ม", "เสาเข็ม"]);
+  reg(["ดัด", "ดัดเหล็ก", "ดัดโค้ง"]);
+  reg(["ผูกเหล็ก", "ผูก", "เหล็ก"]);
+  reg(["ปั้นจั่น", "เครน", "Crane"]);
+  reg(["สืบราคา", "สืบ"]);
+  reg(["เหล็กหล่อ", "Cast Iron", "CI"]);
+  reg(["เหล็กดำ", "Black Steel", "ASTM"]);
+  reg(["GROOVE", "Groove Coupling", "ข้อต่อ"]);
+  reg(["ข้อต่อ", "Coupling", "Fitting", "อุปกรณ์ท่อ"]);
+  reg(["หน้าแปลน", "Flange", "Flanges"]);
+  reg(["ปลอกรัด", "สแตนเลส"]);
+  reg(["ท่อเหล็ก", "เหล็ก", "ท่อ"]);
+  reg(["PVC", "พีวีซี", "พี วี ซี", "พี วี ซี.", "ท่อ PVC"]);
+  reg(["HDPE", "PE", "ท่อ HDPE"]);
+  reg(["PP-R", "PPR", "PB", "ท่อ PP-R"]);
+  reg(["ท่อสังกะสี", "เหล็กเคลือบสังกะสี", "GI Pipe", "สังกะสี"]);
+  reg(["มาตรวัด", "มิเตอร์", "Meter"]);
+  reg(["สายดิน", "Ground", "Earthing"]);
+  reg(["Ground", "สายดิน", "Earthing"]);
+  reg(["ตู้คอนซูมเมอร์", "ตู้เมน", "ตู้ไฟ", "Consumer", "Panel"]);
+  reg(["Timer", "ตั้งเวลา", "เวลาร์"]);
+  reg(["ดวงโคม", "โคม", "Lighting", "โคมไฟ"]);
+  reg(["พัดลมดูดอากาศ", "พัดลม", "ดูดอากาศ"]);
+  reg(["ฉนวนกันความร้อน", "กันความร้อน", "ฉนวน", "insulation"]);
+  reg(["Insulation", "ฉนวน", "ฉนวนกันความร้อน"]);
+  reg(["ฟอล์ย", "ฟอยล์", "Foils", "Foil"]);
+  reg(["ฟอยล์", "ฟอล์ย", "Foil"]);
+  reg(["แป", "จันทัน", "Purlin", "ระแนง"]);
+  reg(["บัว", "บัวเชิงผนัง", "Cornice", "Skirting"]);
+  reg(["บัวเชิงผนัง", "บัว", "Skirting"]);
+  reg(["ฝาบาน", "บานประตู", "ประตู"]);
+  reg(["วงกบ", "Frame", "กรอบ"]);
+  reg(["เหล็กดัด", "Wrought Iron", "เหล็กลาย"]);
+  reg(["มุ้งลวด", "มุ้ง", "Screen"]);
+  reg(["มุ้ง", "มุ้งลวด", "Screen"]);
+  reg(["ระบบกันขโมย", "กันขโมย", "Alarm"]);
+  reg(["Alarm", "กันขโมย", "ระบบกันขโมย"]);
+  reg(["สัญญาณ", "Bell", "Buzzer", "Chime"]);
+  reg(["ประกาศ", "PA", "Public Address"]);
+  reg(["อินเตอร์เน็ต", "อินเทอร์เน็ต", "Network", "LAN"]);
+  reg(["จานดาวเทียม", "ดาวเทียม", "Satellite"]);
+  reg(["เสาอากาศ", "เสา", "Antenna"]);
+  reg(["เครื่องทำน้ำอุ่น", "น้ำอุ่น", "Water Heater"]);
+  reg(["น้ำอุ่น", "เครื่องทำน้ำอุ่น", "Water Heater"]);
+  reg(["ปั๊มน้ำ", "ปั๊ม", "Pump"]);
+  reg(["ปั๊ม", "ปั๊มน้ำ", "Pump"]);
+  reg(["ถังเก็บน้ำ", "ถังน้ำ", "ถัง", "Tank"]);
+  reg(["ถัง", "ถังเก็บน้ำ", "Tank"]);
+  reg(["บ่อพัก", "บ่อ", "Manhole"]);
+  reg(["บ่อ", "บ่อพัก", "Manhole"]);
+  reg(["ท่อระบาย", "ระบาย", "ท่อ"]);
+  reg(["ราวจับ", "ราว", "Handrail"]);
+  reg(["ราว", "ราวจับ", "ราวระเบียง", "Handrail"]);
+  reg(["กันตก", "Guard"]);
+  reg(["ผนัง", "งานผนัง", "Wall", "ฝา"]);
+  reg(["ฝา", "ผนัง", "ฝาไม้", "Wall"]);
+  reg(["ฉาก", "Partition"]);
+  reg(["เพดาน", "Ceiling", "ฝ้า"]);
+  reg(["Ceiling", "ฝ้า", "เพดาน"]);
+  reg(["พื้น", "Floor", "ปูพื้น"]);
+  reg(["ปูพื้น", "พื้น", "ปู"]);
+  reg(["ปู", "ปูพื้น", "ปูผนัง", "ปูกระเบื้อง"]);
+  reg(["ปูกระเบื้อง", "ปู", "กระเบื้อง"]);
+  reg(["กรุ", "บุผนัง", "Cladding"]);
+  reg(["บุผนัง", "กรุ", "Cladding", "ผนัง"]);
+  reg(["ฉาบผนัง", "ฉาบ", "ผนัง"]);
+  reg(["ทาสีผนัง", "ทาสี", "ผนัง"]);
+  reg(["กันชื้น", "กันซึม", "กันความชื้น"]);
+  reg(["มาร์คเกอร์", "Marking"]);
+  reg(["สัญลักษณ์", "Marking", "ป้าย"]);
+  reg(["ป้าย", "Sign", "สัญลักษณ์"]);
+  reg(["โครงหลังคา", "โครง", "Truss"]);
+  reg(["คาน", "Beam", "คานคอดิน"]);
+  reg(["เสา", "Column", "เสาเข็ม"]);
+  reg(["คาน", "Beam"]);
+  reg(["พื้นชั้นล่าง", "พื้น"]);
+  reg(["บันได", "Stair", "ขั้นบันได"]);
+  reg(["Stair", "บันได", "ขั้นบันได"]);
+  reg(["ระเบียง", "Balcony"]);
+  reg(["เฉลียง", "Porch"]);
+  reg(["หลังคา", "Roof"]);
+  reg(["Roof", "หลังคา"]);
+  reg(["ผนังม่าน", "Curtain Wall"]);
+  reg(["Curtain Wall", "ผนังม่าน", "กระจก"]);
+  reg(["ราวกันตก", "ราว", "กันตก"]);
+  reg(["กันสาด", "Canopy", "หลังคากันสาด"]);
+  reg(["Canopy", "กันสาด"]);
+  reg(["โถสุขภัณฑ์", "โถส้วม", "สุขภัณฑ์"]);
+  reg(["อ่างล้างหน้า", "อ่างล้างมือ", "อ่าง", "ล้างหน้า", "ล้างมือ"]);
+  reg(["อ่างล้างมือ", "อ่างล้างหน้า", "อ่าง"]);
+  reg(["ที่ใส่สบู่", "สบู่", "Soap"]);
+  reg(["ราวผ้า", "ราว", "Towel"]);
+  reg(["กระจกเงา", "กระจก", "Mirror"]);
+  reg(["Mirror", "กระจก"]);
+  reg(["ทิชชู่", "Tissue", "ที่ใส่ทิชชู่"]);
+  reg(["ก็อกน้ำ", "ก๊อกน้ำ", "ก๊อก", "Faucet"]);
+  reg(["Faucet", "ก๊อก", "ก๊อกน้ำ"]);
+  reg(["สายยาง", "Hose"]);
+  reg(["Hose", "สายยาง"]);
+  reg(["เครื่องซักผ้า", "ซักผ้า", "Washer"]);
+  reg(["เครื่องอบผ้า", "อบผ้า", "Dryer"]);
+  reg(["เตาแก๊ส", "แก๊ส", "Gas"]);
+  reg(["แก๊ส", "เตาแก๊ส", "Gas"]);
+  reg(["ปล่อง", "Chimney", "Flue"]);
+  reg(["ปล่องระบายอากาศ", "ปล่อง", "Vent"]);
+  reg(["พัดลมเพดาน", "พัดลม", "Ceiling Fan"]);
+  reg(["Ceiling Fan", "พัดลม", "พัดลมเพดาน"]);
+  reg(["เครื่องดูดควัน", "ดูดควัน", "Hood", "Range Hood"]);
+  reg(["ดูดควัน", "เครื่องดูดควัน", "Hood"]);
+  reg(["ม่าน", "Curtain"]);
+  reg(["Curtain", "ม่าน"]);
+  reg(["พาร์ติชั่น", "Partition", "ฉากกั้น"]);
+  reg(["ฉากกั้น", "พาร์ติชั่น", "Partition", "ฉาก"]);
+  reg(["ราวม่าน", "ราว", "ม่าน"]);
+  reg(["ไฟฟ้าแสงสว่าง", "แสงสว่าง", "Lighting"]);
+  reg(["แสงสว่าง", "Lighting", "ไฟฟ้าแสงสว่าง"]);
+  reg(["Emergency", "ฉุกเฉิน", "ไฟฉุกเฉิน"]);
+  reg(["ฉุกเฉิน", "Emergency", "ไฟฉุกเฉิน"]);
+  reg(["ไฟฉุกเฉิน", "ฉุกเฉิน", "Emergency"]);
+  reg(["ป้ายไฟ", "ป้าย", "Sign"]);
+  reg(["แผงโซล่า", "โซล่า", "Solar"]);
+  reg(["โซล่า", "Solar", "แผงโซล่า", "PV"]);
+  reg(["Solar", "โซล่า", "แผงโซล่า"]);
+  reg(["แบตเตอรี่", "Battery"]);
+  reg(["Battery", "แบตเตอรี่"]);
+  reg(["Inverter", "อินเวอร์เตอร์"]);
+  reg(["อินเวอร์เตอร์", "Inverter"]);
+  reg(["เครื่องกำเนิดไฟฟ้า", "Generator", "เครื่องปั่นไฟ"]);
+  reg(["Generator", "เครื่องกำเนิดไฟฟ้า", "เครื่องปั่นไฟ"]);
+  reg(["เครื่องปั่นไฟ", "Generator", "เครื่องกำเนิดไฟฟ้า"]);
+  reg(["หม้อแปลง", "Transformer"]);
+  reg(["Transformer", "หม้อแปลง"]);
+  reg(["ตู้สวิทช์", "ตู้สวิตช์", "Switchboard", "ตู้ไฟ"]);
+  reg(["Switchboard", "ตู้สวิทช์", "ตู้สวิตช์"]);
+  reg(["สายเมน", "เมน", "Main"]);
+  reg(["เมน", "Main", "สายเมน"]);
+  reg(["วงจร", "Circuit"]);
+  reg(["Circuit", "วงจร"]);
+  reg(["โหลดเซ็นเตอร์", "Load Center", "โหลด"]);
+  reg(["Load Center", "โหลดเซ็นเตอร์"]);
+  reg(["คัทเอาท์", "Cut-out", "Cutout"]);
+  reg(["ฟิวส์", "Fuse"]);
+  reg(["Fuse", "ฟิวส์"]);
+  reg(["รีเลย์", "Relay"]);
+  reg(["Relay", "รีเลย์"]);
+  reg(["คอนแทคเตอร์", "Contactor"]);
+  reg(["Contactor", "คอนแทคเตอร์"]);
+  reg(["มอเตอร์", "Motor"]);
+  reg(["Motor", "มอเตอร์"]);
+  reg(["โซลินอยด์", "Solenoid"]);
+  reg(["เซนเซอร์", "Sensor"]);
+  reg(["Sensor", "เซนเซอร์"]);
+  reg(["โฟโต้เซลล์", "Photo Cell", "Photocell"]);
+  reg(["Photocell", "โฟโต้เซลล์", "Photo Cell"]);
+  reg(["ดิมเมอร์", "Dimmer"]);
+  reg(["Dimmer", "ดิมเมอร์"]);
+  reg(["กริ่ง", "Bell", "Chime", "Buzzer"]);
+  reg(["Bell", "กริ่ง", "Chime"]);
+  reg(["โทรทัศน์", "TV", "ทีวี"]);
+  reg(["TV", "โทรทัศน์", "ทีวี"]);
+  reg(["ทีวี", "TV", "โทรทัศน์"]);
+  reg(["เสาโทรทัศน์", "เสา", "TV"]);
+  reg(["สายโคแอกเชียล", "Coaxial", "Coax"]);
+  reg(["Coaxial", "สายโคแอกเชียล"]);
+  reg(["ท่อน้ำ", "ท่อประปา", "ท่อ", "น้ำ"]);
+  reg(["น้ำ", "ท่อน้ำ", "ท่อประปา"]);
+  reg(["ปะปา", "ประปา", "การประปา"]);
+  reg(["อาคาร", "ตัวอาคาร", "Building"]);
+  reg(["Building", "อาคาร"]);
+  reg(["โครงสร้าง", "Structural", "งานโครงสร้าง"]);
+  reg(["Structural", "โครงสร้าง"]);
+  reg(["สถาปัตยกรรม", "งานสถาปัตย์", "Architectural"]);
+  reg(["Architectural", "สถาปัตยกรรม"]);
+  reg(["โยธา", "Civil"]);
+  reg(["Civil", "โยธา"]);
+  reg(["คุมงาน", "ผู้ควบคุมงาน", "Supervision"]);
+  reg(["Supervision", "คุมงาน", "ผู้ควบคุมงาน"]);
+  reg(["วิศวกรรม", "Engineering", "วิศวกร"]);
+  reg(["Engineering", "วิศวกรรม"]);
+  reg(["ป้ายโครงการ", "ป้าย", "โครงการ"]);
+  reg(["โครงการ", "ป้ายโครงการ"]);
+  reg(["เตรียมงาน", "เตรียมพื้นที่", "งานเตรียมการ"]);
+  reg(["เตรียมพื้นที่", "ถาง", "เตรียมงาน"]);
+  reg(["ปรับพื้นที่", "ปรับระดับ", "ถม", "ปรับ"]);
+  reg(["ปรับระดับ", "ปรับพื้นที่", "ปรับ"]);
+  reg(["ราคากลาง", "กลาง"]);
+  reg(["แรงงาน", "ค่าแรง", "แรง"]);
+  reg(["ค่าแรง", "แรงงาน", "แรง"]);
+  reg(["แรง", "ค่าแรง", "แรงงาน"]);
+
+  // ======================================================================
+  // ค้นหา
+  // ======================================================================
+  function expandToken(t) {
+    var key = normToken(t);
+    return SYNONYMS[key] || [t];
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+  function escapeRe(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  function fmt(n) { return n.toLocaleString("th-TH"); }
+
+  // ---- stats + meta ----
+  var nTypes = 0, nItems = 0, nPrices = 0;
+  DATA.categories.forEach(function (c) {
+    nTypes += c.types.length;
+    c.types.forEach(function (t) {
+      nItems += t.items.length;
+      t.items.forEach(function (it) { nPrices += it.prices.length; });
+    });
+  });
+  metaEl.textContent = DATA.meta.title + " | " + DATA.meta.source;
+  statsEl.innerHTML = "ทั้งหมด: <b>" + DATA.categories.length + "</b> หมวด · <b>" + nTypes +
+    "</b> ประเภท · <b>" + nItems + "</b> รายการ · <b>" + nPrices + "</b> ราคา";
+  hintEl.innerHTML = "ค้นด้วยคำพ้อง/คำย่อได้ เช่น <code>คสล</code> = คอนกรีตเสริมเหล็ก · " +
+    "<code>พีวีซี</code> = PVC · <code>เมทัลชีท</code> = Metal Sheet · <code>ยิปซัม</code> = ยิบซั่ม · " +
+    "<code>บล็อก</code> = บล๊อก/บล็อค · ☑ ติ๊กเลือกรายการแล้วกด <b>พิมพ์สรุป</b> เพื่อพิมพ์เฉพาะงานที่ต้องการ";
+
+  // ---- build dropdowns ----
+  DATA.categories.forEach(function (c) {
+    var o = document.createElement("option");
+    o.value = c.code;
+    o.textContent = c.code + " " + c.name;
+    catEl.appendChild(o);
+  });
+
+  function fillTypes(catCode) {
+    typeEl.innerHTML = '<option value="">ทุกประเภท</option>';
+    var cat = DATA.categories.find(function (c) { return c.code === catCode; });
+    if (cat) {
+      cat.types.forEach(function (t) {
+        var o = document.createElement("option");
+        o.value = t.code;
+        o.textContent = t.code + " " + t.name;
+        typeEl.appendChild(o);
+      });
+    }
+  }
+  catEl.addEventListener("change", function () {
+    fillTypes(catEl.value);
+    render();
+  });
+  typeEl.addEventListener("change", render);
+  searchEl.addEventListener("input", render);
+  clearBtn.addEventListener("click", function () {
+    searchEl.value = "";
+    catEl.value = "";
+    typeEl.value = "";
+    fillTypes("");
+    render();
+    searchEl.focus();
+  });
+
+  // ---- flatten ----
+  var rows = [];
+  var selSeq = 0;
+  DATA.categories.forEach(function (c) {
+    c.types.forEach(function (t) {
+      t.items.forEach(function (it) {
+        var key = c.code + "|" + t.code + "|" + (it.code || "") + "|" + it.name;
+        rows.push({ key: key, selId: ++selSeq, cat: c, type: t, item: it });
+      });
+    });
+  });
+
+  function itemText(r) {
+    // note: deliberately excludes the category name — use the category
+    // dropdown to browse whole categories
+    var parts = [r.type.name, r.item.name || "", r.item.code || "",
+                 r.item.section_name || "", r.item.group || ""];
+    r.item.prices.forEach(function (p) { parts.push(p.unit, String(p.price), p.note || ""); });
+    return parts.join(" ").toLowerCase();
+  }
+
+  function matches(r, q, catCode, typeCode) {
+    if (catCode && r.cat.code !== catCode) return false;
+    if (typeCode && r.type.code !== typeCode) return false;
+    if (q) {
+      var text = itemText(r);
+      var tokens = q.split(/\s+/).filter(Boolean);
+      for (var i = 0; i < tokens.length; i++) {
+        var syns = expandToken(tokens[i]);
+        var hit = false;
+        for (var j = 0; j < syns.length; j++) {
+          var s = syns[j].toLowerCase();
+          if (s && text.indexOf(s) !== -1) { hit = true; break; }
+        }
+        if (!hit) return false;
+      }
+    }
+    return true;
+  }
+
+  // build one regex that highlights every synonym found in text
+  function buildHighlight(tokens) {
+    var alts = [];
+    tokens.forEach(function (t) {
+      expandToken(t).forEach(function (s) {
+        if (s.length >= 2) alts.push(s);
+      });
+    });
+    alts.sort(function (a, b) { return b.length - a.length; });
+    var uniq = [];
+    alts.forEach(function (a) { if (uniq.indexOf(a) === -1) uniq.push(a); });
+    if (!uniq.length) return null;
+    return new RegExp("(" + uniq.map(escapeRe).join("|") + ")", "gi");
+  }
+
+  function highlight(raw, re) {
+    if (!re) return escapeHtml(raw);
+    var out = "", last = 0, m;
+    while ((m = re.exec(raw)) !== null) {
+      out += escapeHtml(raw.slice(last, m.index));
+      out += "<mark>" + escapeHtml(m[0]) + "</mark>";
+      last = m.index + m[0].length;
+      if (m[0].length === 0) re.lastIndex++;
+    }
+    out += escapeHtml(raw.slice(last));
+    return out;
+  }
+
+  // ---- render: PDF-style table ----
+  function render() {
+    var rawQ = searchEl.value.trim();
+    var q = rawQ.toLowerCase();
+    var catCode = catEl.value;
+    var typeCode = typeEl.value;
+    var tokens = q ? q.split(/\s+/).filter(Boolean) : [];
+    var hlRe = buildHighlight(tokens);
+
+    var filtered = rows.filter(function (r) { return matches(r, q, catCode, typeCode); });
+
+    updateSelbar();
+    if (!filtered.length) {
+      resultsEl.innerHTML = '<div class="empty"><div class="big">🔍</div>' +
+        "ไม่พบรายการที่ค้นหา ลองเปลี่ยนคำค้นหรือล้างตัวกรอง</div>";
+      statsEl.innerHTML = "พบ <b>0</b> รายการ";
+      return;
+    }
+    statsEl.innerHTML = "พบ <b>" + filtered.length + "</b> รายการ" +
+      (q ? " จากคำค้น \"" + escapeHtml(rawQ) + "\"" : "");
+
+    var html = [];
+    var curCat = null, curType = null;
+    var lastSection = null, lastGroup = null;
+
+    filtered.forEach(function (r) {
+      if (curCat !== r.cat) {
+        if (curType !== null) html.push("</tbody></table></div>");
+        if (curCat !== null) html.push("</div>");
+        curCat = r.cat;
+        curType = null;
+        lastSection = null;
+        lastGroup = null;
+        html.push('<div class="cat-block">');
+        html.push('<div class="cat-title"><span class="code">' + escapeHtml(r.cat.code) +
+                 '</span> ' + highlight(r.cat.name, hlRe) + "</div>");
+      }
+      if (curType !== r.type) {
+        if (curType !== null) html.push("</tbody></table></div>");
+        curType = r.type;
+        lastSection = null;
+        lastGroup = null;
+        html.push('<div class="type-title"><span class="tcode">' + escapeHtml(r.type.code) +
+                 "</span> " + highlight(r.type.name, hlRe));
+        if (r.type.notes && r.type.notes.length) {
+          html.push('<div class="type-note">' + highlight(r.type.notes.join(" · "), hlRe) + "</div>");
+        }
+        html.push("</div>");
+        html.push('<div class="table-wrap"><table class="tbl">');
+        html.push("<thead><tr><th>เลือก</th><th>ลำดับที่</th><th>รายการ</th><th>หน่วย</th>" +
+                  '<th class="p-col">ค่าแรง/หน่วย (บาท)</th><th>หมายเหตุ</th></tr></thead>');
+        html.push("<tbody>");
+      }
+
+      var it = r.item;
+
+      // section sub-heading (e.g. 1.2.1 ค่าตอกเสาเข็มคอนกรีตในเขต กทม.)
+      if (it.section_name) {
+        if (it.section_name !== lastSection) {
+          html.push('<tr class="sec-row"><td colspan="6">' +
+                    (it.section ? '<span class="scode">' + escapeHtml(it.section) + "</span> " : "") +
+                    highlight(it.section_name, hlRe) + "</td></tr>");
+          lastSection = it.section_name;
+        }
+      } else {
+        lastSection = null;
+      }
+      // English group sub-heading (e.g. Ceiling mounted Type)
+      if (it.group) {
+        if (it.group !== lastGroup) {
+          html.push('<tr class="grp-row"><td colspan="6">' + highlight(it.group, hlRe) + "</td></tr>");
+          lastGroup = it.group;
+        }
+      } else {
+        lastGroup = null;
+      }
+
+      if (!it.prices.length) {
+        // container item acts as a sub-heading row (e.g. ตัดหัวเสาเข็มคอนกรีต)
+        html.push('<tr class="sub-row"><td colspan="6">' +
+                  (it.code ? '<span class="scode">' + escapeHtml(it.code) + "</span> " : "") +
+                  highlight(it.name, hlRe) + "</td></tr>");
+        return;
+      }
+
+      // priced item: code + name span across all its price rows
+      var n = it.prices.length;
+      html.push('<tr class="item-row" data-id="' + r.selId + '">');
+      html.push('<td class="c-sel" rowspan="' + n + '"><input type="checkbox" class="sel-box" ' +
+                'data-key="' + escapeHtml(r.key) + '" data-id="' + r.selId + '"></td>');
+      html.push('<td class="c-code" rowspan="' + n + '">' +
+                (it.code ? highlight(it.code, hlRe) : "") + "</td>");
+      html.push('<td class="c-name" rowspan="' + n + '">' + highlight(it.name, hlRe) + "</td>");
+      it.prices.forEach(function (p, idx) {
+        if (idx > 0) html.push('<tr class="item-row" data-id="' + r.selId + '">');
+        html.push('<td class="c-unit">' + highlight(p.unit, hlRe) + "</td>");
+        html.push('<td class="c-price">' + fmt(p.price) + "</td>");
+        html.push('<td class="c-note">' + highlight(p.note || "", hlRe) + "</td>");
+        html.push("</tr>");
+      });
+    });
+
+    if (curType !== null) html.push("</tbody></table></div>");
+    if (curCat !== null) html.push("</div>");
+    resultsEl.innerHTML = html.join("");
+    markSelRows();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
