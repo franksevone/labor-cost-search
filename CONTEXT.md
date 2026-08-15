@@ -107,32 +107,23 @@ node -e "global.window={}; require('./data.js'); console.log(window.LABOR_DATA.c
 - รายการ `1.2.1.15 ตัดหัวเสาเข็มคอนกรีต` ไม่มีราคา (container) — ตั้งใจ
 - "สิ่งที่ส่งมาด้วยตามหนังสือ…" เป็นข้อความท้ายทุกหน้า → ตัดทิ้งใน parser
 
-## 6. การ deploy ขึ้นออนไลน์ (GitHub Pages)
+## 6. การ deploy ขึ้นออนไลน์ (GitHub Pages) — ✅ ทำแล้ว
 
-เว็บนี้เป็น static ล้วน → deploy ง่าย:
+**URL: https://franksevone.github.io/labor-cost-search/**
+**Repo: https://github.com/franksevone/labor-cost-search** (public, branch `main`)
 
-```bash
-# ในโฟลเดอร์นี้ (ทำครั้งแรก)
-git init
-git add .
-git commit -m "ระบบค้นหาบัญชีค่าแรงงานก่อสร้าง"
-git branch -M main
-git remote add origin https://github.com/franksevone/labor-cost-search.git
-git push -u origin main
-```
-
-แล้วเปิด GitHub Pages ใน repo: Settings → Pages → Source: **Deploy from a branch** → branch `main` / root
-
-URL ที่ได้: `https://franksevone.github.io/labor-cost-search/`
-
-> หมายเหตุ: ถ้า rebuild ข้อมูลใหม่ ต้อง commit + push `data.js`/`data.json` ใหม่ด้วย
-> (หน้าเว็บอ่าน `data.js` — ข้อมูลเก่าจะอยู่จนกว่าจะ push ไฟล์ใหม่)
+- เปิด Pages แบบ **Deploy from a branch** (main / root) — ตรวจแล้ว `index.html` + `data.js` ตอบ 200
+- การอัปเดต: แก้ไฟล์ → `git add -A && git commit && git push` → Pages อัปเดตอัตโนมัติ (~1-2 นาที)
+  (**ต้อง push `data.js`/`data.json` ใหม่ทุกครั้งที่ rebuild ข้อมูล** — หน้าเว็บอ่าน `data.js`)
+- ตรวจสถานะ: `gh api repos/franksevone/labor-cost-search/pages` (status ควรเป็น `built`)
+- โฟลเดอร์นี้เป็น git repo แล้ว (init ครั้งแรก 16 ส.ค. 2569)
 
 ## 7. สถานะปัจจุบัน
 
 - ✅ ข้อมูลตรงกับ PDF ต้นฉบับ (ตรวจเทียบแล้วหลายรอบ)
 - ✅ validate.py ผ่าน · data.js โหลดใน node ได้
-- ✅ พร้อมใช้งาน offline (เปิด index.html) และ online (GitHub Pages)
+- ✅ พร้อมใช้งาน offline (เปิด index.html) และ online (GitHub Pages) — **https://franksevone.github.io/labor-cost-search/**
+- ✅ เป็น git repo แล้ว (remote: origin → github.com/franksevone/labor-cost-search)
 - 📌 ตัวเลขเฝ้าระวัง: items 1,285 · prices 1,471 · missing_unit 0
 
 ## 8. ไอเดียต่อยอด (ดูรายละเอียดใน SUMMARY.md)
